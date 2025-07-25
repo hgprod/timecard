@@ -15,6 +15,11 @@ func add_category(name: String, parent: Category) -> Category:
 	Project.save_doc()
 	return cat
 
+func load_category(id: int) -> Category:
+	for item in _list:
+		if item.get_category_id() == id: return item
+	return null
+
 func get_categories_for_parent(parent: Category) -> Array[Category]:
 	var pid = parent.get_category_id() if is_instance_valid(parent) else 0
 	var list: Array[Category] = []

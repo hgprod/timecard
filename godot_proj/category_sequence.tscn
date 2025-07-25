@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://ckqqrpofsmukt"]
+[gd_scene load_steps=5 format=3 uid="uid://ckqqrpofsmukt"]
 
 [ext_resource type="Script" uid="uid://btyvf6lc2cu7h" path="res://category_sequence.gd" id="1_v8oia"]
 
@@ -47,6 +47,16 @@ func _on_change():
 	_update_categories()
 "
 
+[sub_resource type="GDScript" id="GDScript_jgsiu"]
+script/source = "extends Label
+
+func _on_cat_change(cat: Category) -> void:
+	if cat == null:
+		text = \"Create Root Category\"
+	else:
+		text = \"Create sub category in %s\" % cat.get_category_name()
+"
+
 [sub_resource type="GDScript" id="GDScript_v8oia"]
 script/source = "extends Node
 
@@ -60,7 +70,6 @@ func _on_add_category() -> void:
 	var new_cat = Project.get_data().get_categories().add_category(new_name, cat)
 	_category_listing.push_new_category(new_cat)
 	_text_entry.clear()
-	Project.get_data().get_categories().debug_print_list()
 
 func _on_name_change(new_text: String) -> void:
 	var val = new_text.strip_edges().strip_escapes()
@@ -72,13 +81,28 @@ offset_right = 348.0
 offset_bottom = 42.0
 script = ExtResource("1_v8oia")
 
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "Category Selection"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
 [node name="CategoryContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
 script = SubResource("GDScript_kwhvw")
 
-[node name="HSeparator" type="HSeparator" parent="."]
+[node name="Spacer2" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
+
+[node name="SubCategoryPrompt" type="Label" parent="."]
+layout_mode = 2
+text = "Add Sub Category"
+script = SubResource("GDScript_jgsiu")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -98,5 +122,6 @@ _submit_button = NodePath("../HBoxContainer/NameEntrySubmit")
 _category_listing = NodePath("../CategoryContainer")
 _text_entry = NodePath("../HBoxContainer/NameEntry")
 
+[connection signal="category_changed" from="." to="SubCategoryPrompt" method="_on_cat_change"]
 [connection signal="text_changed" from="HBoxContainer/NameEntry" to="CategoryCreateControl" method="_on_name_change"]
 [connection signal="pressed" from="HBoxContainer/NameEntrySubmit" to="CategoryCreateControl" method="_on_add_category"]

@@ -1,0 +1,87 @@
+[gd_scene load_steps=4 format=3 uid="uid://b5rwfwmgodebx"]
+
+[ext_resource type="Script" uid="uid://b3te37samw5x3" path="res://task_control.gd" id="1_r5ary"]
+
+[sub_resource type="GDScript" id="GDScript_8xjfl"]
+script/source = "extends Label
+
+func _on_update() -> void:
+	var task := Project.get_data().get_running_task()
+	if not is_instance_valid(task): return
+	var cat := Project.get_data().get_categories().load_category(task.get_category_id())
+	text = \"Task %s: %s\" % [cat.get_category_name(), task.get_elapsed_time_string()]
+"
+
+[sub_resource type="GDScript" id="GDScript_r5ary"]
+script/source = "extends Node
+
+@export var _start_button: Button
+@export var _stop_button: Button
+@export var _task_display: Label
+
+var _cat: Category
+
+func set_category(cat: Category):
+	_start_button.text = \"Start Task %s\" % cat.get_category_name()
+	_stop_button.text = \"End Task %s\" % cat.get_category_name()
+	_cat = cat
+
+func load_running_task():
+	var task := Project.get_data().get_running_task()
+	if is_instance_valid(task): set_category(Project.get_data().get_categories().load_category(task.get_category_id()))
+	_set_task(task)
+
+func _set_task(task: Task):
+	_start_button.visible = not is_instance_valid(task)
+	_stop_button.visible = is_instance_valid(task)
+	_task_display.visible = is_instance_valid(task)
+	(owner as TaskControl).task_changed.emit(task)
+
+func _on_start_pressed() -> void:
+	var task = Task.start_task(_cat.get_category_id())
+	_set_task(task)
+
+func _on_end_pressed() -> void:
+	var task := Project.get_data().get_running_task()
+	if is_instance_valid(task): task.end_task()
+	_set_task(null)
+"
+
+[node name="TaskControl" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_r5ary")
+
+[node name="Spacer" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="."]
+layout_mode = 2
+text = "Start Task"
+
+[node name="TaskTime" type="Label" parent="."]
+layout_mode = 2
+script = SubResource("GDScript_8xjfl")
+
+[node name="UpdateTimer" type="Timer" parent="TaskTime"]
+wait_time = 0.5
+autostart = true
+
+[node name="StopButton" type="Button" parent="."]
+layout_mode = 2
+text = "Start Task"
+
+[node name="DataControl" type="Node" parent="." node_paths=PackedStringArray("_start_button", "_stop_button", "_task_display")]
+unique_name_in_owner = true
+script = SubResource("GDScript_r5ary")
+_start_button = NodePath("../StartButton")
+_stop_button = NodePath("../StopButton")
+_task_display = NodePath("../TaskTime")
+
+[connection signal="pressed" from="StartButton" to="DataControl" method="_on_start_pressed"]
+[connection signal="timeout" from="TaskTime/UpdateTimer" to="TaskTime" method="_on_update"]
+[connection signal="pressed" from="StopButton" to="DataControl" method="_on_end_pressed"]

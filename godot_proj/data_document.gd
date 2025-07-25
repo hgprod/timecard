@@ -14,3 +14,6 @@ func get_running_task() -> Task:
 	for t in _tasks:
 		if t.is_running(): return t
 	return null
+
+func get_task_list() -> Array[Task]:
+	return _tasks

@@ -1,9 +1,53 @@
-[gd_scene format=3 uid="uid://b6340qabh0uhr"]
+[gd_scene load_steps=4 format=3 uid="uid://b6340qabh0uhr"]
 
-[node name="MainScene" type="Control"]
-layout_mode = 3
+[ext_resource type="PackedScene" uid="uid://ckqqrpofsmukt" path="res://category_sequence.tscn" id="1_0f027"]
+[ext_resource type="PackedScene" uid="uid://b5rwfwmgodebx" path="res://task_control.tscn" id="2_2c62f"]
+
+[sub_resource type="GDScript" id="GDScript_2c62f"]
+script/source = "extends ItemList
+
+func _ready() -> void:
+	_update_view()
+
+func _update_view():
+	clear()
+	var tasks := Project.get_data().get_task_list()
+	for item in tasks:
+		var cat = Project.get_data().get_categories().load_category(item.get_category_id())
+		add_item(\"%s - %s\" % [cat.get_category_name(), item.get_elapsed_time_string()], null, false)
+"
+
+[node name="MainScene" type="TabContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+current_tab = 0
+
+[node name="TimeCard" type="CenterContainer" parent="."]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="VBox" type="VBoxContainer" parent="TimeCard"]
+layout_mode = 2
+
+[node name="CategorySequence" parent="TimeCard/VBox" instance=ExtResource("1_0f027")]
+layout_mode = 2
+
+[node name="TaskControl" parent="TimeCard/VBox" instance=ExtResource("2_2c62f")]
+layout_mode = 2
+
+[node name="Reports" type="CenterContainer" parent="."]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="ItemList" type="ItemList" parent="Reports"]
+layout_mode = 2
+auto_width = true
+auto_height = true
+script = SubResource("GDScript_2c62f")
+
+[connection signal="category_changed" from="TimeCard/VBox/CategorySequence" to="TimeCard/VBox/TaskControl" method="_on_set_category"]
+[connection signal="task_changed" from="TimeCard/VBox/TaskControl" to="TimeCard/VBox/CategorySequence" method="_on_task_changed"]
