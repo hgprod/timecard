@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="TimeCard"
+run/main_scene="uid://b6340qabh0uhr"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[gui]
+
+theme/custom="uid://cxjrx7xchpm0h"
 
 [rendering]
 

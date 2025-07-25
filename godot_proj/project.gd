@@ -12,3 +12,8 @@ static func get_data() -> DataDocument:
 		return _doc
 	_doc = ResourceLoader.load(save_loc)
 	return _doc
+
+static func save_doc():
+	if not is_instance_valid(_doc):
+		_doc = get_data()
+	ResourceSaver.save(_doc, save_loc)

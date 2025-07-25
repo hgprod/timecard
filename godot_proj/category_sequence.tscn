@@ -1,0 +1,102 @@
+[gd_scene load_steps=4 format=3 uid="uid://ckqqrpofsmukt"]
+
+[ext_resource type="Script" uid="uid://btyvf6lc2cu7h" path="res://category_sequence.gd" id="1_v8oia"]
+
+[sub_resource type="GDScript" id="GDScript_kwhvw"]
+script/source = "extends Container
+
+var _category_stack: Array[CategoryListing] = []
+
+func get_end_category() -> Category:
+	if _category_stack.size() < 2: return null
+	return _category_stack[_category_stack.size() - 2].get_selected_category()
+
+func push_new_category(cat: Category):
+	_category_stack.back().set_selected_category(cat)
+	_update_categories()
+
+func _enter_tree() -> void:
+	_update_categories()
+
+func _update_categories():
+	var stack: Array[Category] = []
+	for sel in _category_stack:
+		var obj = sel.get_selected_category()
+		if is_instance_valid(obj): stack.push_back(sel.get_selected_category())
+		else: break
+	_category_stack.clear()
+	for obj in get_children():
+		obj.queue_free()
+	for index in stack.size():
+		var sel := CategoryListing.new()
+		sel.set_parent(null if index == 0 else stack[index - 1])
+		if not sel.set_selected_category(stack[index]):
+			sel.queue_free()
+			break
+		sel.selection_changed.connect(_on_change)
+		add_child(sel)
+		_category_stack.push_back(sel)
+	var empty := CategoryListing.new()
+	empty.set_parent(_category_stack.back().get_selected_category() if _category_stack.size() != 0 else null)
+	empty.selection_changed.connect(_on_change)
+	add_child(empty)
+	_category_stack.push_back(empty)
+	(owner as CategorySequence).category_changed.emit(get_end_category())
+
+func _on_change():
+	_update_categories()
+"
+
+[sub_resource type="GDScript" id="GDScript_v8oia"]
+script/source = "extends Node
+
+@export var _submit_button: Button
+@export var _category_listing: Container
+@export var _text_entry: LineEdit
+
+func _on_add_category() -> void:
+	var cat: Category = _category_listing.get_end_category()
+	var new_name = _text_entry.text.strip_edges().strip_escapes()
+	var new_cat = Project.get_data().get_categories().add_category(new_name, cat)
+	_category_listing.push_new_category(new_cat)
+	_text_entry.clear()
+	Project.get_data().get_categories().debug_print_list()
+
+func _on_name_change(new_text: String) -> void:
+	var val = new_text.strip_edges().strip_escapes()
+	_submit_button.disabled = val.length() == 0
+"
+
+[node name="CategorySequence" type="VBoxContainer"]
+offset_right = 348.0
+offset_bottom = 42.0
+script = ExtResource("1_v8oia")
+
+[node name="CategoryContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = SubResource("GDScript_kwhvw")
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="NameEntry" type="LineEdit" parent="HBoxContainer"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+placeholder_text = "new category"
+
+[node name="NameEntrySubmit" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "Add Category"
+
+[node name="CategoryCreateControl" type="Node" parent="." node_paths=PackedStringArray("_submit_button", "_category_listing", "_text_entry")]
+script = SubResource("GDScript_v8oia")
+_submit_button = NodePath("../HBoxContainer/NameEntrySubmit")
+_category_listing = NodePath("../CategoryContainer")
+_text_entry = NodePath("../HBoxContainer/NameEntry")
+
+[connection signal="text_changed" from="HBoxContainer/NameEntry" to="CategoryCreateControl" method="_on_name_change"]
+[connection signal="pressed" from="HBoxContainer/NameEntrySubmit" to="CategoryCreateControl" method="_on_add_category"]
