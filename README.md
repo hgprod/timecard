@@ -1,1 +1,1 @@
-Time Card is a very basic time tracking system. Add categories and sub categories and use the start and stop to trakc a task. There is a reporting tab, but it is barely used at this point. More updates to come.
+Time Card is a very basic time tracking system. Add categories and sub categories and use the start and stop to track a task. There is a reporting tab, but it is barely used at this point. More updates to come.
