@@ -13,15 +13,7 @@ func get_elapsed_time() -> int:
 	return _end_time - _start_time
 
 func get_elapsed_time_string() -> String:
-	var time = get_elapsed_time()
-	@warning_ignore("integer_division")
-	var h: int = time / 3600
-	time -= h * 3600
-	@warning_ignore("integer_division")
-	var m: int = time / 60
-	time -= m * 60
-	var s: int = time
-	return "%d:%02d:%02d" % [h, m, s]
+	return format_time_string(get_elapsed_time())
 
 func end_task():
 	_end_time = Time.get_unix_time_from_datetime_dict(Time.get_datetime_dict_from_system(true))
@@ -29,6 +21,16 @@ func end_task():
 
 func is_running() -> bool:
 	return _end_time == 0
+
+static func format_time_string(seconds: int) -> String:
+	@warning_ignore("integer_division")
+	var h: int = seconds / 3600
+	seconds -= h * 3600
+	@warning_ignore("integer_division")
+	var m: int = seconds / 60
+	seconds -= m * 60
+	var s: int = seconds
+	return "%d:%02d:%02d" % [h, m, s]
 
 static func start_task(cat: int) -> Task:
 	var t := Task.new()
