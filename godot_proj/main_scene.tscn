@@ -2,20 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://ckqqrpofsmukt" path="res://category_sequence.tscn" id="1_0f027"]
 [ext_resource type="PackedScene" uid="uid://b5rwfwmgodebx" path="res://task_control.tscn" id="2_2c62f"]
-
-[sub_resource type="GDScript" id="GDScript_2c62f"]
-script/source = "extends ItemList
-
-func _ready() -> void:
-	_update_view()
-
-func _update_view():
-	clear()
-	var tasks := Project.get_data().get_task_list()
-	for item in tasks:
-		var cat = Project.get_data().get_categories().load_category(item.get_category_id())
-		add_item(\"%s - %s\" % [cat.get_category_name(), item.get_elapsed_time_string()], null, false)
-"
+[ext_resource type="PackedScene" uid="uid://c3hahjuufpmau" path="res://report_panel.tscn" id="3_gyfs4"]
 
 [node name="MainScene" type="TabContainer"]
 anchors_preset = 15
@@ -38,16 +25,13 @@ layout_mode = 2
 [node name="TaskControl" parent="TimeCard/VBox" instance=ExtResource("2_2c62f")]
 layout_mode = 2
 
-[node name="Reports" type="CenterContainer" parent="."]
+[node name="Reports" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="ItemList" type="ItemList" parent="Reports"]
+[node name="ReportPanel" parent="Reports" instance=ExtResource("3_gyfs4")]
 layout_mode = 2
-auto_width = true
-auto_height = true
-script = SubResource("GDScript_2c62f")
 
 [connection signal="category_changed" from="TimeCard/VBox/CategorySequence" to="TimeCard/VBox/TaskControl" method="_on_set_category"]
 [connection signal="task_changed" from="TimeCard/VBox/TaskControl" to="TimeCard/VBox/CategorySequence" method="_on_task_changed"]
