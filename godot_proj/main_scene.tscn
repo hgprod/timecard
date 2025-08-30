@@ -1,8 +1,17 @@
-[gd_scene load_steps=4 format=3 uid="uid://b6340qabh0uhr"]
+[gd_scene load_steps=5 format=3 uid="uid://b6340qabh0uhr"]
 
 [ext_resource type="PackedScene" uid="uid://ckqqrpofsmukt" path="res://category_sequence.tscn" id="1_0f027"]
 [ext_resource type="PackedScene" uid="uid://b5rwfwmgodebx" path="res://task_control.tscn" id="2_2c62f"]
 [ext_resource type="PackedScene" uid="uid://c3hahjuufpmau" path="res://report_panel.tscn" id="3_gyfs4"]
+
+[sub_resource type="GDScript" id="GDScript_gyfs4"]
+script/source = "extends Node
+
+signal show_report_panel
+
+func _on_tab_selected(tab: int) -> void:
+	if tab == 1: show_report_panel.emit()
+"
 
 [node name="MainScene" type="TabContainer"]
 anchors_preset = 15
@@ -33,5 +42,10 @@ metadata/_tab_index = 1
 [node name="ReportPanel" parent="Reports" instance=ExtResource("3_gyfs4")]
 layout_mode = 2
 
+[node name="TabControl" type="Node" parent="."]
+script = SubResource("GDScript_gyfs4")
+
+[connection signal="tab_selected" from="." to="TabControl" method="_on_tab_selected"]
 [connection signal="category_changed" from="TimeCard/VBox/CategorySequence" to="TimeCard/VBox/TaskControl" method="_on_set_category"]
 [connection signal="task_changed" from="TimeCard/VBox/TaskControl" to="TimeCard/VBox/CategorySequence" method="_on_task_changed"]
+[connection signal="show_report_panel" from="TabControl" to="Reports/ReportPanel" method="_on_show_panel"]

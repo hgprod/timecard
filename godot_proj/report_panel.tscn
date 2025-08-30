@@ -1,37 +1,26 @@
-[gd_scene load_steps=4 format=3 uid="uid://c3hahjuufpmau"]
-
-[sub_resource type="ButtonGroup" id="ButtonGroup_mip8u"]
+[gd_scene load_steps=3 format=3 uid="uid://c3hahjuufpmau"]
 
 [sub_resource type="GDScript" id="GDScript_6v7fx"]
 script/source = "extends VBoxContainer
 
-func _ready() -> void:
-	visible = false
-
-func _on_activate(toggled_on: bool) -> void:
-	visible = toggled_on
+func _on_show_panel():
+	%ReportControl.redraw()
 "
 
 [sub_resource type="GDScript" id="GDScript_mip8u"]
 script/source = "extends Node
 
-enum ReportMode { OFF, TASK, DATE }
-
 @export var _display: Tree
-@export var _task_sum_toggle: CheckButton
 
-var _mode: ReportMode
+var _sum_task_time: bool
 
-func _set_mode(mode: ReportMode):
-	_mode = mode
+func redraw():
+	_draw_tree()
+
+func _draw_tree():
 	_display.clear()
-	if mode == ReportMode.OFF:
-		return
-	if mode == ReportMode.TASK:
-		_display.create_item()
-		_build_cat_tree(Project.get_data().get_categories().get_categories_for_parent(null), null)
-	if mode == ReportMode.DATE:
-		return
+	_display.create_item()
+	_build_cat_tree(Project.get_data().get_categories().get_categories_for_parent(null), null)
 
 func _build_cat_tree(list: Array[Category], parent: TreeItem) -> int:
 	var time_sum: int = 0
@@ -45,7 +34,7 @@ func _build_cat_tree(list: Array[Category], parent: TreeItem) -> int:
 			time += _build_cat_tree(children, branch)
 		branch.set_text(1, Task.format_time_string(time))
 		time_sum += time
-	return time_sum if _task_sum_toggle.button_pressed else 0
+	return time_sum if _sum_task_time else 0
 
 func _get_time_for_cat(cat: Category) -> int:
 	var tasks := Project.get_data().get_task_list()
@@ -55,11 +44,9 @@ func _get_time_for_cat(cat: Category) -> int:
 			time += item.get_elapsed_time()
 	return time
 
-func _on_task_mode():
-	_set_mode(ReportMode.TASK)
-
-func _on_date_mode():
-	_set_mode(ReportMode.DATE)
+func _on_sum_task_toggled(toggled_on: bool) -> void:
+	_sum_task_time = toggled_on
+	_draw_tree()
 "
 
 [node name="ReportPanel" type="VBoxContainer"]
@@ -68,32 +55,12 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="TaskButton" type="CheckButton" parent="."]
-layout_mode = 2
-button_group = SubResource("ButtonGroup_mip8u")
-text = "Task Report"
-
-[node name="TaskFilters" type="VBoxContainer" parent="."]
-layout_mode = 2
 script = SubResource("GDScript_6v7fx")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="TaskFilters"]
-layout_mode = 2
-
-[node name="Indent" type="Control" parent="TaskFilters/HBoxContainer"]
-custom_minimum_size = Vector2(60, 0)
-layout_mode = 2
-
-[node name="SumTask" type="CheckButton" parent="TaskFilters/HBoxContainer"]
+[node name="SumTask" type="CheckButton" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Category Time Include Sub-Category Times"
-
-[node name="DateButton" type="CheckButton" parent="."]
-layout_mode = 2
-button_group = SubResource("ButtonGroup_mip8u")
-text = "Date Report"
 
 [node name="Tree" type="Tree" parent="."]
 layout_mode = 2
@@ -101,12 +68,9 @@ size_flags_vertical = 3
 columns = 2
 hide_root = true
 
-[node name="ReportControl" type="Node" parent="." node_paths=PackedStringArray("_display", "_task_sum_toggle")]
+[node name="ReportControl" type="Node" parent="." node_paths=PackedStringArray("_display")]
+unique_name_in_owner = true
 script = SubResource("GDScript_mip8u")
 _display = NodePath("../Tree")
-_task_sum_toggle = NodePath("../TaskFilters/HBoxContainer/SumTask")
 
-[connection signal="pressed" from="TaskButton" to="ReportControl" method="_on_task_mode"]
-[connection signal="toggled" from="TaskButton" to="TaskFilters" method="_on_activate"]
-[connection signal="pressed" from="TaskFilters/HBoxContainer/SumTask" to="ReportControl" method="_on_task_mode"]
-[connection signal="pressed" from="DateButton" to="ReportControl" method="_on_date_mode"]
+[connection signal="toggled" from="SumTask" to="ReportControl" method="_on_sum_task_toggled"]
